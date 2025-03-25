@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface TranslationResult {
   original: string;
@@ -15,43 +16,8 @@ export function useTranslation() {
     isLoading: false,
     error: null,
   });
-
-  // Simple dictionary for demo purposes
-  // In a real app, you would use an API like Google Translate
-  const englishToFrench: Record<string, string> = {
-    "hello": "bonjour",
-    "goodbye": "au revoir",
-    "thank you": "merci",
-    "please": "s'il vous plaît",
-    "yes": "oui",
-    "no": "non",
-    "good morning": "bonjour",
-    "good evening": "bonsoir",
-    "good night": "bonne nuit",
-    "how are you": "comment allez-vous",
-    "I'm fine": "je vais bien",
-    "what's your name": "comment vous appelez-vous",
-    "my name is": "je m'appelle",
-    "nice to meet you": "enchanté",
-    "excuse me": "excusez-moi",
-    "I don't understand": "je ne comprends pas",
-    "where is": "où est",
-    "how much": "combien",
-    "I would like": "je voudrais",
-    "the bill please": "l'addition s'il vous plaît",
-    "delicious": "délicieux",
-    "cheers": "santé",
-    "welcome": "bienvenue",
-    "sorry": "désolé",
-    "love": "amour",
-    "friend": "ami",
-    "family": "famille",
-    "today": "aujourd'hui",
-    "tomorrow": "demain",
-    "yesterday": "hier",
-  };
-
-  const translateText = (text: string) => {
+  
+  const translateText = async (text: string) => {
     if (!text.trim()) {
       setResult({
         original: "",
@@ -69,41 +35,54 @@ export function useTranslation() {
       error: null,
     });
 
-    // Simulate API delay
-    setTimeout(() => {
-      try {
-        // For longer text, split by spaces and translate word by word if in dictionary
-        const words = text.toLowerCase().split(' ');
-        const translatedWords = words.map(word => {
-          // Check if the word is in our dictionary
-          if (englishToFrench[word]) {
-            return englishToFrench[word];
-          }
-          
-          // Check if the entire phrase is in our dictionary
-          if (englishToFrench[text.toLowerCase()]) {
-            return englishToFrench[text.toLowerCase()];
-          }
-          
-          // If not found, return the original word
-          return word;
-        });
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("openai_api_key")}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional French translator. Translate the provided English text to French. Only respond with the translated text, nothing else."
+            },
+            {
+              role: "user",
+              content: text
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 1000,
+        }),
+      });
 
-        setResult({
-          original: text,
-          translated: translatedWords.join(' '),
-          isLoading: false,
-          error: null,
-        });
-      } catch (err) {
-        setResult({
-          original: text,
-          translated: "",
-          isLoading: false,
-          error: "Translation failed. Please try again.",
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Translation failed");
       }
-    }, 600);
+
+      const data = await response.json();
+      const translatedText = data.choices[0].message.content.trim();
+
+      setResult({
+        original: text,
+        translated: translatedText,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error("Translation error:", error);
+      setResult({
+        original: text,
+        translated: "",
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Translation failed. Please try again.",
+      });
+      toast.error("Translation failed. Please check your API key.");
+    }
   };
 
   return {

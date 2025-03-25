@@ -3,6 +3,7 @@ import React from "react";
 import Header from "@/components/Header";
 import TranslationCard from "@/components/TranslationCard";
 import Footer from "@/components/Footer";
+import ApiKeyInput from "@/components/ApiKeyInput";
 
 const Index: React.FC = () => {
   return (
@@ -19,8 +20,9 @@ const Index: React.FC = () => {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
         
-        <main className="flex-grow flex items-center justify-center px-4 py-12">
+        <main className="flex-grow flex flex-col items-center justify-center px-4 py-12">
           <div className="container-french">
+            <ApiKeyInput />
             <TranslationCard />
             
             {/* Additional information */}
@@ -30,6 +32,7 @@ const Index: React.FC = () => {
                 This elegant translator is designed with the principles of French architecture in mind – 
                 simplicity, symmetry, and attention to detail. The interface reflects the 
                 clean lines and subtle ornamentation found in classic French design.
+                Powered by OpenAI's GPT-4o for accurate translations.
               </p>
             </div>
           </div>

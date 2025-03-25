@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { toast } from "sonner";
 
 const TranslationCard: React.FC = () => {
   const [inputText, setInputText] = useState("");
@@ -18,7 +19,15 @@ const TranslationCard: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
-    translateText(e.target.value);
+  };
+
+  const handleTranslate = () => {
+    if (!localStorage.getItem("openai_api_key")) {
+      toast.error("Please enter your OpenAI API key first");
+      return;
+    }
+    
+    translateText(inputText);
   };
 
   const handleCopyToClipboard = () => {
@@ -59,6 +68,12 @@ const TranslationCard: React.FC = () => {
                   className="w-full p-4 rounded-lg bg-white/50 border border-parisMuted focus:border-parisBlue focus:ring-1 focus:ring-parisBlue resize-none min-h-[120px] transition-all duration-200"
                   rows={3}
                 />
+                <button
+                  onClick={handleTranslate}
+                  className="absolute bottom-3 right-3 px-3 py-1 bg-parisBlue text-white rounded-md hover:bg-parisBlue/90 transition-colors text-xs"
+                >
+                  Translate
+                </button>
               </div>
             </div>
             
